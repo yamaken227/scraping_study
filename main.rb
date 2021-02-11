@@ -1,41 +1,16 @@
-require 'bundler/setup'
-require 'nokogiri'
 require 'open-uri'
-require 'csv'
+require 'nokogiri'
 
-def setup_doc(url)
-  charset = 'utf-8'
-  html = open(url) { |f| f.read }
-  doc = Nokogiri::HTML.parse(html,nil,charset)
-  doc = search('br').each{ |n| n.replace("¥n") }
-  doc
+url = ''#切り出すURLを指定
+
+charset = nil
+html = open(url) do |f|
+  charset = f.charset #文字種別を取得
+  f.read 
 end
 
-def scrape(url)
-  doc = setup_doc(url)
-  page_title = doc.xpath('div/h1').text
-  detail_url = doc.xpath('div/h2/a').attribute('href').value
+page = Nokogiri::HTML.parse(html, nil, charset)
 
-  [page_title,detail_url,url]
-end
+shuzo_meigen = page.search('p')
 
-if __FILE__ == $0
-  urls = [
-    'https://www.example1.com',
-    'https://www.example2.com',
-    'https://www.example3.com'
-  ]
-  csv_header = ['ページタイトル','詳細URL','URL']
-
-  CSV.open('result.csv','w') do |csv|
-    csv << csv_header
-    urls.each do |url|
-      begin
-        csv << scrape(url)
-      rescue
-        # エラー処理
-        # 例）　csv << ['err', 'err', url]
-      end
-    end
-  end
-end
+p shuzo_meigen.text
